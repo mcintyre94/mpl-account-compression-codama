@@ -1152,99 +1152,6 @@
       },
       {
         "kind": "definedTypeNode",
-        "name": "concurrentMerkleTreeHeaderDataV1",
-        "docs": [],
-        "type": {
-          "kind": "structTypeNode",
-          "fields": [
-            {
-              "kind": "structFieldTypeNode",
-              "name": "maxBufferSize",
-              "docs": [
-                "Buffer of changelogs stored on-chain.",
-                "Must be a power of 2; see above table for valid combinations."
-              ],
-              "type": {
-                "kind": "numberTypeNode",
-                "format": "u32",
-                "endian": "le"
-              }
-            },
-            {
-              "kind": "structFieldTypeNode",
-              "name": "maxDepth",
-              "docs": [
-                "Depth of the SPL ConcurrentMerkleTree to store.",
-                "Tree capacity can be calculated as power(2, max_depth).",
-                "See above table for valid options."
-              ],
-              "type": {
-                "kind": "numberTypeNode",
-                "format": "u32",
-                "endian": "le"
-              }
-            },
-            {
-              "kind": "structFieldTypeNode",
-              "name": "authority",
-              "docs": [
-                "Authority that validates the content of the trees.",
-                "Typically a program, e.g., the Bubblegum contract validates that leaves are valid NFTs."
-              ],
-              "type": {
-                "kind": "publicKeyTypeNode"
-              }
-            },
-            {
-              "kind": "structFieldTypeNode",
-              "name": "creationSlot",
-              "docs": [
-                "Slot corresponding to when the Merkle tree was created.",
-                "Provides a lower-bound on what slot to start (re-)building a tree from."
-              ],
-              "type": {
-                "kind": "numberTypeNode",
-                "format": "u64",
-                "endian": "le"
-              }
-            },
-            {
-              "kind": "structFieldTypeNode",
-              "name": "isBatchInitialized",
-              "docs": [
-                "A flag indicating whether the tree has been initialized with a root.",
-                "This field was added together with the `finalize_tree_with_root` instruction.",
-                "It takes 1 byte of space taken from the previous padding for existing accounts."
-              ],
-              "type": {
-                "kind": "booleanTypeNode",
-                "size": {
-                  "kind": "numberTypeNode",
-                  "format": "u8",
-                  "endian": "le"
-                }
-              }
-            },
-            {
-              "kind": "structFieldTypeNode",
-              "name": "padding",
-              "docs": [
-                "Needs padding for the account to be 8-byte aligned",
-                "8-byte alignment is necessary to zero-copy the SPL ConcurrentMerkleTree"
-              ],
-              "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 5,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              }
-            }
-          ]
-        }
-      },
-      {
-        "kind": "definedTypeNode",
         "name": "pathNode",
         "docs": [],
         "type": {
@@ -1403,14 +1310,93 @@
           "kind": "enumTypeNode",
           "variants": [
             {
-              "kind": "enumTupleVariantTypeNode",
+              "kind": "enumStructVariantTypeNode",
               "name": "v1",
-              "tuple": {
-                "kind": "tupleTypeNode",
-                "items": [
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
                   {
-                    "kind": "definedTypeLinkNode",
-                    "name": "concurrentMerkleTreeHeaderDataV1"
+                    "kind": "structFieldTypeNode",
+                    "name": "maxBufferSize",
+                    "docs": [
+                      "Buffer of changelogs stored on-chain.",
+                      "Must be a power of 2; see above table for valid combinations."
+                    ],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u32",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "maxDepth",
+                    "docs": [
+                      "Depth of the SPL ConcurrentMerkleTree to store.",
+                      "Tree capacity can be calculated as power(2, max_depth).",
+                      "See above table for valid options."
+                    ],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u32",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authority",
+                    "docs": [
+                      "Authority that validates the content of the trees.",
+                      "Typically a program, e.g., the Bubblegum contract validates that leaves are valid NFTs."
+                    ],
+                    "type": {
+                      "kind": "publicKeyTypeNode"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "creationSlot",
+                    "docs": [
+                      "Slot corresponding to when the Merkle tree was created.",
+                      "Provides a lower-bound on what slot to start (re-)building a tree from."
+                    ],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "isBatchInitialized",
+                    "docs": [
+                      "A flag indicating whether the tree has been initialized with a root.",
+                      "This field was added together with the `finalize_tree_with_root` instruction.",
+                      "It takes 1 byte of space taken from the previous padding for existing accounts."
+                    ],
+                    "type": {
+                      "kind": "booleanTypeNode",
+                      "size": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "padding",
+                    "docs": [
+                      "Needs padding for the account to be 8-byte aligned",
+                      "8-byte alignment is necessary to zero-copy the SPL ConcurrentMerkleTree"
+                    ],
+                    "type": {
+                      "kind": "fixedSizeTypeNode",
+                      "size": 5,
+                      "type": {
+                        "kind": "bytesTypeNode"
+                      }
+                    }
                   }
                 ]
               }

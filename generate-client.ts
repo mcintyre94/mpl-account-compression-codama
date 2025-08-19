@@ -1,4 +1,4 @@
-import { accountNode, argumentValueNode, assertIsNode, bottomUpTransformerVisitor, bytesTypeNode, createFromRoot, definedTypeLinkNode, getLastNodeFromPath, instructionNode, instructionRemainingAccountsNode, isNode, programNode, rootNodeVisitor, structFieldTypeNode, structTypeNode } from "codama";
+import { accountNode, argumentValueNode, assertIsNode, bottomUpTransformerVisitor, bytesTypeNode, createFromRoot, definedTypeLinkNode, getLastNodeFromPath, instructionNode, instructionRemainingAccountsNode, isNode, programNode, rootNodeVisitor, structFieldTypeNode, structTypeNode, unwrapTupleEnumWithSingleStructVisitor } from "codama";
 import mplAccountCompressionIdl from "./idls/mpl_account_compression.json" with { type: "json" };
 import mplNoopIdl from "./idls/mpl_noop.json" with { type: "json" };
 import { rootNodeFromAnchor, type AnchorIdl } from "@codama/nodes-from-anchor";
@@ -66,6 +66,11 @@ codama.update(
     }
   ])
 )
+
+// Transform tuple enum variants to structs.
+codama.update(
+  unwrapTupleEnumWithSingleStructVisitor(["ConcurrentMerkleTreeHeaderData.v1"])
+);
 
 // Render tree.
 writeFileSync(
