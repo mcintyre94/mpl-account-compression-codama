@@ -1,0 +1,1575 @@
+{
+  "kind": "rootNode",
+  "standard": "codama",
+  "version": "1.3.2",
+  "program": {
+    "kind": "programNode",
+    "name": "mplAccountCompression",
+    "publicKey": "mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW",
+    "version": "0.4.2",
+    "origin": "anchor",
+    "docs": [],
+    "accounts": [],
+    "instructions": [
+      {
+        "kind": "instructionNode",
+        "name": "initEmptyMerkleTree",
+        "docs": [
+          "Creates a new merkle tree with maximum leaf capacity of `power(2, max_depth)`",
+          "and a minimum concurrency limit of `max_buffer_size`.",
+          "",
+          "Concurrency limit represents the # of replace instructions that can be successfully",
+          "executed with proofs dated for the same root. For example, a maximum buffer size of 1024",
+          "means that a minimum of 1024 replaces can be executed before a new proof must be",
+          "generated for the next replace instruction.",
+          "",
+          "Concurrency limit should be determined by empirically testing the demand for",
+          "state built on top of SPL Compression.",
+          "",
+          "For instructions on enabling the canopy, see [canopy]."
+        ],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "merkleTree",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "authority",
+            "isWritable": false,
+            "isSigner": true,
+            "isOptional": false,
+            "docs": [
+              "Authority that controls write-access to the tree",
+              "Typically a program, e.g., the Bubblegum contract validates that leaves are valid NFTs."
+            ],
+            "defaultValue": {
+              "kind": "identityValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "noop",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [
+              "Program used to emit changelogs as cpi instruction data."
+            ]
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "bf0b7707b46bdc6e",
+              "encoding": "base16"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "maxDepth",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u32",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "maxBufferSize",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u32",
+              "endian": "le"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "prepareBatchMerkleTree",
+        "docs": [
+          "(Devnet only) In order to initialize a tree with a root, we need to create the tree on-chain first with",
+          "the proper authority. The tree might contain a canopy, which is a cache of the uppermost",
+          "nodes. The canopy is used to decrease the size of the proof required to update the tree.",
+          "If the tree is expected to have a canopy, it needs to be prefilled with the necessary nodes.",
+          "There are 2 ways to initialize a merkle tree:",
+          "1. Initialize an empty tree",
+          "2. Initialize a tree with a root and leaf",
+          "For the former case, the canopy will be empty which is expected for an empty tree. The",
+          "expected flow is `init_empty_merkle_tree`. For the latter case, the canopy should be",
+          "filled with the necessary nodes to render the tree usable. Thus we need to prefill the",
+          "canopy with the necessary nodes. The expected flow for a tree without canopy is",
+          "`prepare_batch_merkle_tree` -> `init_prepared_tree_with_root`. The expected flow for a tree",
+          "with canopy is `prepare_batch_merkle_tree` -> `append_canopy_nodes` (multiple times",
+          "until all of the canopy is filled) -> `init_prepared_tree_with_root`. This instruction",
+          "initializes the tree header while leaving the tree itself uninitialized. This allows",
+          "distinguishing between an empty tree and a tree prepare to be initialized with a root."
+        ],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "merkleTree",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "authority",
+            "isWritable": false,
+            "isSigner": true,
+            "isOptional": false,
+            "docs": [
+              "Authority that controls write-access to the tree",
+              "Typically a program, e.g., the Bubblegum contract validates that leaves are valid NFTs."
+            ],
+            "defaultValue": {
+              "kind": "identityValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "noop",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [
+              "Program used to emit changelogs as cpi instruction data."
+            ]
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "e67c78c4f986c780",
+              "encoding": "base16"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "maxDepth",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u32",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "maxBufferSize",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u32",
+              "endian": "le"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "appendCanopyNodes",
+        "docs": [
+          "(Devnet only) This instruction pre-initializes the canopy with the specified leaf nodes of the canopy.",
+          "This is intended to be used after `prepare_batch_merkle_tree` and in conjunction with the",
+          "`init_prepared_tree_with_root` instruction that'll finalize the tree initialization.",
+          "The canopy is used to cache the uppermost nodes of the tree, which allows for a smaller",
+          "proof size when updating the tree. The canopy should be filled with the necessary nodes",
+          "before calling `init_prepared_tree_with_root`. You may call this instruction multiple",
+          "times to fill the canopy with the necessary nodes. The canopy may be filled with the",
+          "nodes in any order. The already filled nodes may be replaced with new nodes before calling",
+          "`init_prepared_tree_with_root` if the step was done in error.",
+          "The canopy should be filled with all the nodes that are to the left of the rightmost",
+          "leaf of the tree before calling `init_prepared_tree_with_root`. The canopy should not",
+          "contain any nodes to the right of the rightmost leaf of the tree.",
+          "This instruction calculates and filles in all the canopy nodes \"above\" the provided ones.",
+          "The validation of the canopy is done in the `init_prepared_tree_with_root` instruction."
+        ],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "merkleTree",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "authority",
+            "isWritable": false,
+            "isSigner": true,
+            "isOptional": false,
+            "docs": [
+              "Authority that controls write-access to the tree",
+              "Typically a program, e.g., the Bubblegum contract validates that leaves are valid NFTs."
+            ],
+            "defaultValue": {
+              "kind": "identityValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "noop",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [
+              "Program used to emit changelogs as cpi instruction data."
+            ]
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "8b9beea70bf384cd",
+              "encoding": "base16"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "startIndex",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u32",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "canopyNodes",
+            "docs": [],
+            "type": {
+              "kind": "arrayTypeNode",
+              "item": {
+                "kind": "fixedSizeTypeNode",
+                "size": 32,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "count": {
+                "kind": "prefixedCountNode",
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u32",
+                  "endian": "le"
+                }
+              }
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "initPreparedTreeWithRoot",
+        "docs": [
+          "(Devnet only) Initializes a prepared tree with a root and a rightmost leaf. The rightmost leaf is used to",
+          "verify the canopy if the tree has it. Before calling this instruction, the tree should be",
+          "prepared with `prepare_batch_merkle_tree` and the canopy should be filled with the necessary",
+          "nodes with `append_canopy_nodes` (if the canopy is used). This method should be used for",
+          "batch creation of trees. The indexing of such batches should be done off-chain. The",
+          "programs calling this instruction should take care of ensuring the indexing is possible.",
+          "For example, staking may be required to ensure the tree creator has some responsibility",
+          "for what is being indexed. If indexing is not possible, there should be a mechanism to",
+          "penalize the tree creator."
+        ],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "merkleTree",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "authority",
+            "isWritable": false,
+            "isSigner": true,
+            "isOptional": false,
+            "docs": [
+              "Authority that controls write-access to the tree",
+              "Typically a program, e.g., the Bubblegum contract validates that leaves are valid NFTs."
+            ],
+            "defaultValue": {
+              "kind": "identityValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "noop",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [
+              "Program used to emit changelogs as cpi instruction data."
+            ]
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "daf8c0375bcd7a0a",
+              "encoding": "base16"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "root",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 32,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "rightmostLeaf",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 32,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "rightmostIndex",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u32",
+              "endian": "le"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "replaceLeaf",
+        "docs": [
+          "Executes an instruction that overwrites a leaf node.",
+          "Composing programs should check that the data hashed into previous_leaf",
+          "matches the authority information necessary to execute this instruction."
+        ],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "merkleTree",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "authority",
+            "isWritable": false,
+            "isSigner": true,
+            "isOptional": false,
+            "docs": [
+              "Authority that controls write-access to the tree",
+              "Typically a program, e.g., the Bubblegum contract validates that leaves are valid NFTs."
+            ],
+            "defaultValue": {
+              "kind": "identityValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "noop",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [
+              "Program used to emit changelogs as cpi instruction data."
+            ]
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "cca54c6449930080",
+              "encoding": "base16"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "root",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 32,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "previousLeaf",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 32,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "newLeaf",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 32,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "index",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u32",
+              "endian": "le"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "transferAuthority",
+        "docs": [
+          "Transfers `authority`.",
+          "Requires `authority` to sign"
+        ],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "merkleTree",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "authority",
+            "isWritable": false,
+            "isSigner": true,
+            "isOptional": false,
+            "docs": [
+              "Authority that controls write-access to the tree",
+              "Typically a program, e.g., the Bubblegum contract validates that leaves are valid NFTs."
+            ],
+            "defaultValue": {
+              "kind": "identityValueNode"
+            }
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "30a94c48e5b437a1",
+              "encoding": "base16"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "newAuthority",
+            "docs": [],
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "verifyLeaf",
+        "docs": [
+          "Verifies a provided proof and leaf.",
+          "If invalid, throws an error."
+        ],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "merkleTree",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "7cdc16df680afae0",
+              "encoding": "base16"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "root",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 32,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "leaf",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 32,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "index",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u32",
+              "endian": "le"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "append",
+        "docs": [
+          "This instruction allows the tree's `authority` to append a new leaf to the tree",
+          "without having to supply a proof.",
+          "",
+          "Learn more about SPL",
+          "ConcurrentMerkleTree",
+          "[here](https://github.com/solana-labs/solana-program-library/tree/master/libraries/concurrent-merkle-tree)"
+        ],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "merkleTree",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "authority",
+            "isWritable": false,
+            "isSigner": true,
+            "isOptional": false,
+            "docs": [
+              "Authority that controls write-access to the tree",
+              "Typically a program, e.g., the Bubblegum contract validates that leaves are valid NFTs."
+            ],
+            "defaultValue": {
+              "kind": "identityValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "noop",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [
+              "Program used to emit changelogs as cpi instruction data."
+            ]
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "957812deece158cb",
+              "encoding": "base16"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "leaf",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 32,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "insertOrAppend",
+        "docs": [
+          "This instruction takes a proof, and will attempt to write the given leaf",
+          "to the specified index in the tree. If the insert operation fails, the leaf will be `append`-ed",
+          "to the tree.",
+          "It is up to the indexer to parse the final location of the leaf from the emitted changelog."
+        ],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "merkleTree",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "authority",
+            "isWritable": false,
+            "isSigner": true,
+            "isOptional": false,
+            "docs": [
+              "Authority that controls write-access to the tree",
+              "Typically a program, e.g., the Bubblegum contract validates that leaves are valid NFTs."
+            ],
+            "defaultValue": {
+              "kind": "identityValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "noop",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [
+              "Program used to emit changelogs as cpi instruction data."
+            ]
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "062a32be336db2a8",
+              "encoding": "base16"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "root",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 32,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "leaf",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 32,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "index",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u32",
+              "endian": "le"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "closeEmptyTree",
+        "docs": [],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "merkleTree",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "authority",
+            "isWritable": false,
+            "isSigner": true,
+            "isOptional": false,
+            "docs": [
+              "Authority that controls write-access to the tree"
+            ],
+            "defaultValue": {
+              "kind": "identityValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "recipient",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "320edb6b4e671067",
+              "encoding": "base16"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      }
+    ],
+    "definedTypes": [
+      {
+        "kind": "definedTypeNode",
+        "name": "applicationDataEventV1",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "applicationData",
+              "docs": [],
+              "type": {
+                "kind": "sizePrefixTypeNode",
+                "type": {
+                  "kind": "bytesTypeNode"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u32",
+                  "endian": "le"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "changeLogEventV1",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "id",
+              "docs": [
+                "Public key of the ConcurrentMerkleTree"
+              ],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "path",
+              "docs": [
+                "Nodes of off-chain merkle tree needed by indexer"
+              ],
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "pathNode"
+                },
+                "count": {
+                  "kind": "prefixedCountNode",
+                  "prefix": {
+                    "kind": "numberTypeNode",
+                    "format": "u32",
+                    "endian": "le"
+                  }
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "seq",
+              "docs": [
+                "Index corresponding to the number of successful operations on this tree.",
+                "Used by the off-chain indexer to figure out when there are gaps to be backfilled."
+              ],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "index",
+              "docs": [
+                "Bitmap of node parity (used when hashing)"
+              ],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u32",
+                "endian": "le"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "concurrentMerkleTreeHeader",
+        "docs": [
+          "Initialization parameters for an SPL ConcurrentMerkleTree.",
+          "",
+          "Only the following permutations are valid:",
+          "",
+          "| max_depth | max_buffer_size       |",
+          "| --------- | --------------------- |",
+          "| 14        | (64, 256, 1024, 2048) |",
+          "| 20        | (64, 256, 1024, 2048) |",
+          "| 24        | (64, 256, 512, 1024, 2048) |",
+          "| 26        | (64, 256, 512, 1024, 2048) |",
+          "| 30        | (512, 1024, 2048) |",
+          ""
+        ],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "accountType",
+              "docs": [
+                "Account type"
+              ],
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "compressionAccountType"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "header",
+              "docs": [
+                "Versioned header"
+              ],
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "concurrentMerkleTreeHeaderData"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "concurrentMerkleTreeHeaderDataV1",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "maxBufferSize",
+              "docs": [
+                "Buffer of changelogs stored on-chain.",
+                "Must be a power of 2; see above table for valid combinations."
+              ],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u32",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "maxDepth",
+              "docs": [
+                "Depth of the SPL ConcurrentMerkleTree to store.",
+                "Tree capacity can be calculated as power(2, max_depth).",
+                "See above table for valid options."
+              ],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u32",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "authority",
+              "docs": [
+                "Authority that validates the content of the trees.",
+                "Typically a program, e.g., the Bubblegum contract validates that leaves are valid NFTs."
+              ],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "creationSlot",
+              "docs": [
+                "Slot corresponding to when the Merkle tree was created.",
+                "Provides a lower-bound on what slot to start (re-)building a tree from."
+              ],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "isBatchInitialized",
+              "docs": [
+                "A flag indicating whether the tree has been initialized with a root.",
+                "This field was added together with the `finalize_tree_with_root` instruction.",
+                "It takes 1 byte of space taken from the previous padding for existing accounts."
+              ],
+              "type": {
+                "kind": "booleanTypeNode",
+                "size": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "padding",
+              "docs": [
+                "Needs padding for the account to be 8-byte aligned",
+                "8-byte alignment is necessary to zero-copy the SPL ConcurrentMerkleTree"
+              ],
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 5,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "pathNode",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "node",
+              "docs": [],
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 32,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "index",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u32",
+                "endian": "le"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "applicationDataEvent",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumTupleVariantTypeNode",
+              "name": "v1",
+              "tuple": {
+                "kind": "tupleTypeNode",
+                "items": [
+                  {
+                    "kind": "definedTypeLinkNode",
+                    "name": "applicationDataEventV1"
+                  }
+                ]
+              }
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "changeLogEvent",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumTupleVariantTypeNode",
+              "name": "v1",
+              "tuple": {
+                "kind": "tupleTypeNode",
+                "items": [
+                  {
+                    "kind": "definedTypeLinkNode",
+                    "name": "changeLogEventV1"
+                  }
+                ]
+              }
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "accountCompressionEvent",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumTupleVariantTypeNode",
+              "name": "changeLog",
+              "tuple": {
+                "kind": "tupleTypeNode",
+                "items": [
+                  {
+                    "kind": "definedTypeLinkNode",
+                    "name": "changeLogEvent"
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumTupleVariantTypeNode",
+              "name": "applicationData",
+              "tuple": {
+                "kind": "tupleTypeNode",
+                "items": [
+                  {
+                    "kind": "definedTypeLinkNode",
+                    "name": "applicationDataEvent"
+                  }
+                ]
+              }
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "compressionAccountType",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "uninitialized"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "concurrentMerkleTree"
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "concurrentMerkleTreeHeaderData",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumTupleVariantTypeNode",
+              "name": "v1",
+              "tuple": {
+                "kind": "tupleTypeNode",
+                "items": [
+                  {
+                    "kind": "definedTypeLinkNode",
+                    "name": "concurrentMerkleTreeHeaderDataV1"
+                  }
+                ]
+              }
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      }
+    ],
+    "pdas": [],
+    "errors": [
+      {
+        "kind": "errorNode",
+        "name": "incorrectLeafLength",
+        "code": 6000,
+        "message": "Incorrect leaf length. Expected vec of 32 bytes",
+        "docs": [
+          "IncorrectLeafLength: Incorrect leaf length. Expected vec of 32 bytes"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "concurrentMerkleTreeError",
+        "code": 6001,
+        "message": "Concurrent merkle tree error",
+        "docs": [
+          "ConcurrentMerkleTreeError: Concurrent merkle tree error"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "zeroCopyError",
+        "code": 6002,
+        "message": "Issue zero copying concurrent merkle tree data",
+        "docs": [
+          "ZeroCopyError: Issue zero copying concurrent merkle tree data"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "concurrentMerkleTreeConstantsError",
+        "code": 6003,
+        "message": "An unsupported max depth or max buffer size constant was provided",
+        "docs": [
+          "ConcurrentMerkleTreeConstantsError: An unsupported max depth or max buffer size constant was provided"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "canopyLengthMismatch",
+        "code": 6004,
+        "message": "Expected a different byte length for the merkle tree canopy",
+        "docs": [
+          "CanopyLengthMismatch: Expected a different byte length for the merkle tree canopy"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "incorrectAuthority",
+        "code": 6005,
+        "message": "Provided authority does not match expected tree authority",
+        "docs": [
+          "IncorrectAuthority: Provided authority does not match expected tree authority"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "incorrectAccountOwner",
+        "code": 6006,
+        "message": "Account is owned by a different program, expected it to be owned by this program",
+        "docs": [
+          "IncorrectAccountOwner: Account is owned by a different program, expected it to be owned by this program"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "incorrectAccountType",
+        "code": 6007,
+        "message": "Account provided has incorrect account type",
+        "docs": [
+          "IncorrectAccountType: Account provided has incorrect account type"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "leafIndexOutOfBounds",
+        "code": 6008,
+        "message": "Leaf index of concurrent merkle tree is out of bounds",
+        "docs": [
+          "LeafIndexOutOfBounds: Leaf index of concurrent merkle tree is out of bounds"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "canopyNotAllocated",
+        "code": 6009,
+        "message": "Tree was initialized without allocating space for the canopy",
+        "docs": [
+          "CanopyNotAllocated: Tree was initialized without allocating space for the canopy"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "treeAlreadyInitialized",
+        "code": 6010,
+        "message": "Tree was already initialized",
+        "docs": [
+          "TreeAlreadyInitialized: Tree was already initialized"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "batchNotInitialized",
+        "code": 6011,
+        "message": "Tree header was not initialized for batch processing",
+        "docs": [
+          "BatchNotInitialized: Tree header was not initialized for batch processing"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "canopyRootMismatch",
+        "code": 6012,
+        "message": "Canopy root does not match the root of the tree",
+        "docs": [
+          "CanopyRootMismatch: Canopy root does not match the root of the tree"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "canopyRightmostLeafMismatch",
+        "code": 6013,
+        "message": "Canopy contains nodes to the right of the rightmost leaf of the tree",
+        "docs": [
+          "CanopyRightmostLeafMismatch: Canopy contains nodes to the right of the rightmost leaf of the tree"
+        ]
+      }
+    ]
+  },
+  "additionalPrograms": [
+    {
+      "kind": "programNode",
+      "name": "mplNoop",
+      "publicKey": "mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3",
+      "version": "0.2.1",
+      "origin": "shank",
+      "docs": [],
+      "accounts": [],
+      "instructions": [
+        {
+          "kind": "instructionNode",
+          "name": "noopInstruction",
+          "docs": [],
+          "optionalAccountStrategy": "programId",
+          "accounts": [],
+          "arguments": [
+            {
+              "kind": "instructionArgumentNode",
+              "name": "discriminator",
+              "defaultValueStrategy": "omitted",
+              "docs": [],
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 1,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "defaultValue": {
+                "kind": "bytesValueNode",
+                "data": "0",
+                "encoding": "base16"
+              }
+            },
+            {
+              "kind": "instructionArgumentNode",
+              "name": "data",
+              "docs": [],
+              "type": {
+                "kind": "sizePrefixTypeNode",
+                "type": {
+                  "kind": "bytesTypeNode"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u32",
+                  "endian": "le"
+                }
+              }
+            }
+          ],
+          "discriminators": [
+            {
+              "kind": "fieldDiscriminatorNode",
+              "name": "discriminator",
+              "offset": 0
+            }
+          ]
+        }
+      ],
+      "definedTypes": [],
+      "pdas": [],
+      "errors": []
+    }
+  ]
+}
