@@ -1,7 +1,8 @@
-import { accountNode, argumentValueNode, assertIsNode, bottomUpTransformerVisitor, bytesTypeNode, createFromRoot, definedTypeLinkNode, getLastNodeFromPath, instructionNode, instructionRemainingAccountsNode, isNode, programNode, rootNodeVisitor, structFieldTypeNode, structTypeNode, unwrapTupleEnumWithSingleStructVisitor } from "codama";
+import { accountNode, argumentValueNode, assertIsNode, bottomUpTransformerVisitor, bytesTypeNode, createFromRoot, definedTypeLinkNode, instructionNode, instructionRemainingAccountsNode, programNode, rootNodeVisitor, structFieldTypeNode, structTypeNode, unwrapTupleEnumWithSingleStructVisitor } from "codama";
 import mplAccountCompressionIdl from "./idls/mpl_account_compression.json" with { type: "json" };
 import mplNoopIdl from "./idls/mpl_noop.json" with { type: "json" };
 import { rootNodeFromAnchor, type AnchorIdl } from "@codama/nodes-from-anchor";
+import { renderVisitor as renderJavaScriptVisitor } from "@codama/renderers-js";
 import path from "node:path";
 import { writeFileSync } from "node:fs";
 
@@ -49,7 +50,7 @@ codama.update(
         })
       }
     },
-    // // Use extra "proof" arg as remaining accounts.
+    // Use extra "proof" arg as remaining accounts.
     {
       select: '[instructionNode]verifyLeaf',
       transform: (node) => {
@@ -76,4 +77,13 @@ codama.update(
 writeFileSync(
   path.join("trees", "codama.json"),
   JSON.stringify(JSON.parse(codama.getJson()), null, 2)
+);
+
+// Render Javascript.
+codama.accept(
+  renderJavaScriptVisitor("clients/js/src/generated/", {
+    deleteFolderBeforeRendering: true,
+    formatCode: true,
+    // customAccountData: ["merkleTree"],
+  })
 );
