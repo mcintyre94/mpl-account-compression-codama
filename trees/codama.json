@@ -735,6 +735,17 @@
             }
           }
         ],
+        "remainingAccounts": [
+          {
+            "kind": "instructionRemainingAccountsNode",
+            "isOptional": true,
+            "docs": [],
+            "value": {
+              "kind": "argumentValueNode",
+              "name": "proof"
+            }
+          }
+        ],
         "discriminators": [
           {
             "kind": "fieldDiscriminatorNode",

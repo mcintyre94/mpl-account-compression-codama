@@ -1,4 +1,4 @@
-import { accountNode, assertIsNode, bottomUpTransformerVisitor, bytesTypeNode, createFromRoot, definedTypeLinkNode, programNode, rootNodeVisitor, structFieldTypeNode, structTypeNode } from "codama";
+import { accountNode, argumentValueNode, assertIsNode, bottomUpTransformerVisitor, bytesTypeNode, createFromRoot, definedTypeLinkNode, getLastNodeFromPath, instructionNode, instructionRemainingAccountsNode, isNode, programNode, rootNodeVisitor, structFieldTypeNode, structTypeNode } from "codama";
 import mplAccountCompressionIdl from "./idls/mpl_account_compression.json" with { type: "json" };
 import mplNoopIdl from "./idls/mpl_noop.json" with { type: "json" };
 import { rootNodeFromAnchor, type AnchorIdl } from "@codama/nodes-from-anchor";
@@ -19,6 +19,7 @@ codama.update(
 
 codama.update(
   bottomUpTransformerVisitor([
+    // Add nodes to the mplAccountCompression program.
     {
       select: '[programNode]mplAccountCompression',
       transform: (node) => {
@@ -47,45 +48,24 @@ codama.update(
           ]
         })
       }
+    },
+    // // Use extra "proof" arg as remaining accounts.
+    {
+      select: '[instructionNode]verifyLeaf',
+      transform: (node) => {
+        assertIsNode(node, 'instructionNode');
+        return instructionNode({
+          ...node,
+          remainingAccounts: [
+            instructionRemainingAccountsNode(argumentValueNode("proof"), {
+              isOptional: true,
+            }),
+          ],
+        })
+      }
     }
   ])
 )
-
-/*
-kinobi.update(
-  new k.TransformNodesVisitor([
-    {
-      // Use extra "proof" arg as remaining accounts.
-      selector: (node) =>
-        k.isInstructionNode(node) &&
-        [
-          "verifyLeaf",
-        ].includes(node.name),
-      transformer: (node) => {
-        k.assertInstructionNode(node);
-        return k.instructionNode({
-          ...node,
-          remainingAccounts: k.remainingAccountsFromArg("proof"),
-          argDefaults: {
-            ...node.argDefaults,
-            proof: k.valueDefault(k.vList([])),
-          },
-          extraArgs: k.instructionExtraArgsNode({
-            ...node.extraArgs,
-            struct: k.structTypeNode([
-              ...node.extraArgs.struct.fields,
-              k.structFieldTypeNode({
-                name: "proof",
-                child: k.arrayTypeNode(k.publicKeyTypeNode()),
-              }),
-            ]),
-          }),
-        });
-      },
-    },
-  ])
-);
-*/
 
 // Render tree.
 writeFileSync(
