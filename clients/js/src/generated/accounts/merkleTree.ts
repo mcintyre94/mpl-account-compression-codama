@@ -9,81 +9,36 @@
 import {
   assertAccountExists,
   assertAccountsExist,
-  combineCodec,
   decodeAccount,
   fetchEncodedAccount,
   fetchEncodedAccounts,
-  getBytesDecoder,
-  getBytesEncoder,
-  getStructDecoder,
-  getStructEncoder,
   type Account,
   type Address,
-  type Codec,
-  type Decoder,
   type EncodedAccount,
-  type Encoder,
   type FetchAccountConfig,
   type FetchAccountsConfig,
   type MaybeAccount,
   type MaybeEncodedAccount,
-  type ReadonlyUint8Array,
 } from '@solana/kit';
 import {
-  getCompressionAccountTypeDecoder,
-  getCompressionAccountTypeEncoder,
-  getConcurrentMerkleTreeHeaderDataDecoder,
-  getConcurrentMerkleTreeHeaderDataEncoder,
-  type CompressionAccountType,
-  type CompressionAccountTypeArgs,
-  type ConcurrentMerkleTreeHeaderData,
-  type ConcurrentMerkleTreeHeaderDataArgs,
-} from '../types';
-
-export type MerkleTree = {
-  discriminator: CompressionAccountType;
-  treeHeader: ConcurrentMerkleTreeHeaderData;
-  serializedTree: ReadonlyUint8Array;
-};
-
-export type MerkleTreeArgs = {
-  discriminator: CompressionAccountTypeArgs;
-  treeHeader: ConcurrentMerkleTreeHeaderDataArgs;
-  serializedTree: ReadonlyUint8Array;
-};
-
-export function getMerkleTreeEncoder(): Encoder<MerkleTreeArgs> {
-  return getStructEncoder([
-    ['discriminator', getCompressionAccountTypeEncoder()],
-    ['treeHeader', getConcurrentMerkleTreeHeaderDataEncoder()],
-    ['serializedTree', getBytesEncoder()],
-  ]);
-}
-
-export function getMerkleTreeDecoder(): Decoder<MerkleTree> {
-  return getStructDecoder([
-    ['discriminator', getCompressionAccountTypeDecoder()],
-    ['treeHeader', getConcurrentMerkleTreeHeaderDataDecoder()],
-    ['serializedTree', getBytesDecoder()],
-  ]);
-}
-
-export function getMerkleTreeCodec(): Codec<MerkleTreeArgs, MerkleTree> {
-  return combineCodec(getMerkleTreeEncoder(), getMerkleTreeDecoder());
-}
+  getMerkleTreeAccountDataDecoder,
+  type MerkleTreeAccountData,
+} from '../../hooked';
 
 export function decodeMerkleTree<TAddress extends string = string>(
   encodedAccount: EncodedAccount<TAddress>
-): Account<MerkleTree, TAddress>;
+): Account<MerkleTreeAccountData, TAddress>;
 export function decodeMerkleTree<TAddress extends string = string>(
   encodedAccount: MaybeEncodedAccount<TAddress>
-): MaybeAccount<MerkleTree, TAddress>;
+): MaybeAccount<MerkleTreeAccountData, TAddress>;
 export function decodeMerkleTree<TAddress extends string = string>(
   encodedAccount: EncodedAccount<TAddress> | MaybeEncodedAccount<TAddress>
-): Account<MerkleTree, TAddress> | MaybeAccount<MerkleTree, TAddress> {
+):
+  | Account<MerkleTreeAccountData, TAddress>
+  | MaybeAccount<MerkleTreeAccountData, TAddress> {
   return decodeAccount(
     encodedAccount as MaybeEncodedAccount<TAddress>,
-    getMerkleTreeDecoder()
+    getMerkleTreeAccountDataDecoder()
   );
 }
 
@@ -91,7 +46,7 @@ export async function fetchMerkleTree<TAddress extends string = string>(
   rpc: Parameters<typeof fetchEncodedAccount>[0],
   address: Address<TAddress>,
   config?: FetchAccountConfig
-): Promise<Account<MerkleTree, TAddress>> {
+): Promise<Account<MerkleTreeAccountData, TAddress>> {
   const maybeAccount = await fetchMaybeMerkleTree(rpc, address, config);
   assertAccountExists(maybeAccount);
   return maybeAccount;
@@ -101,7 +56,7 @@ export async function fetchMaybeMerkleTree<TAddress extends string = string>(
   rpc: Parameters<typeof fetchEncodedAccount>[0],
   address: Address<TAddress>,
   config?: FetchAccountConfig
-): Promise<MaybeAccount<MerkleTree, TAddress>> {
+): Promise<MaybeAccount<MerkleTreeAccountData, TAddress>> {
   const maybeAccount = await fetchEncodedAccount(rpc, address, config);
   return decodeMerkleTree(maybeAccount);
 }
@@ -110,7 +65,7 @@ export async function fetchAllMerkleTree(
   rpc: Parameters<typeof fetchEncodedAccounts>[0],
   addresses: Array<Address>,
   config?: FetchAccountsConfig
-): Promise<Account<MerkleTree>[]> {
+): Promise<Account<MerkleTreeAccountData>[]> {
   const maybeAccounts = await fetchAllMaybeMerkleTree(rpc, addresses, config);
   assertAccountsExist(maybeAccounts);
   return maybeAccounts;
@@ -120,7 +75,7 @@ export async function fetchAllMaybeMerkleTree(
   rpc: Parameters<typeof fetchEncodedAccounts>[0],
   addresses: Array<Address>,
   config?: FetchAccountsConfig
-): Promise<MaybeAccount<MerkleTree>[]> {
+): Promise<MaybeAccount<MerkleTreeAccountData>[]> {
   const maybeAccounts = await fetchEncodedAccounts(rpc, addresses, config);
   return maybeAccounts.map((maybeAccount) => decodeMerkleTree(maybeAccount));
 }
